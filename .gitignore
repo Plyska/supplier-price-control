@@ -1,0 +1,26 @@
+# Internal project documentation
+/AGENTS.md
+/PROJECT_BRIEF.md
+/TECHNICAL_SPEC.md
+/IMPLEMENTATION_PLAN.md
+
+# Dependencies and builds
+node_modules/
+dist/
+coverage/
+*.local
+
+# Logs
+*.log
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
