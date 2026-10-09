@@ -11,10 +11,12 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - i18next and react-i18next
 - Motion for React
 - Radix UI primitives
+- Node.js and Express 5 API
+- Zod environment validation
 - pnpm workspace
 - Feature-Sliced Design for the frontend architecture
 
-The planned backend uses Node.js, Express, Prisma, Supabase PostgreSQL, and Cloudflare R2.
+The API foundation is implemented with Node.js and Express. Prisma, Supabase PostgreSQL, Cloudflare R2, and a background worker are planned next.
 
 ## Requirements
 
@@ -27,20 +29,46 @@ With nvm installed, activate the project version:
 nvm use
 ```
 
-Install dependencies and start the frontend:
+Install dependencies and start the frontend and API together:
 
 ```bash
 pnpm install
-pnpm dev:web
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+pnpm dev
 ```
+
+The frontend uses the Vite development URL shown in the terminal. Axios sends requests to the relative `/api/v1` prefix, and Vite proxies `/api` to `http://127.0.0.1:3000` by default. The API health endpoint is `GET /api/v1/health`.
+
+For direct cross-origin requests, Express allows credentialed requests from `WEB_ORIGIN` (`http://localhost:5173` by default). Change `WEB_ORIGIN` and `API_PROXY_TARGET` in the corresponding local environment files when the development origins differ.
+
+To start a single process, use `pnpm dev:web` or `pnpm dev:api`.
 
 ## Available checks
 
 ```bash
-pnpm typecheck:web
-pnpm lint:web
-pnpm build:web
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm build
 ```
+
+The corresponding `:web` and `:api` scripts remain available for package-specific checks.
+
+## API structure
+
+```text
+apps/api/
+├── src/
+│   ├── config/    # Runtime environment validation
+│   ├── http/      # Request middleware and error responses
+│   ├── routes/    # Versioned API routes
+│   ├── app.ts     # Express composition without opening a port
+│   └── server.ts  # Process startup and graceful shutdown
+└── tests/         # HTTP and configuration tests
+```
+
+The shared frontend API client lives in `apps/web/src/shared/api`. It has a typed health request, structured Axios error type, credentials enabled, and native `AbortSignal` support.
 
 ## Frontend structure
 
