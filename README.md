@@ -8,6 +8,9 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - Vite 8
 - React Router
 - Tailwind CSS 4
+- i18next and react-i18next
+- Motion for React
+- Radix UI primitives
 - pnpm workspace
 - Feature-Sliced Design for the frontend architecture
 
