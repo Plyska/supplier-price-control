@@ -53,7 +53,7 @@ export function LanguageSwitcher() {
       <DropdownMenu.Trigger asChild>
         <Button
           aria-label={t('languageSwitcher.ariaLabel')}
-          className="min-w-18 justify-between text-xs font-semibold"
+          className="min-w-18 justify-around text-xs font-semibold"
           disabled={isLanguageChanging}
           size="sm"
           type="button"
@@ -95,7 +95,7 @@ export function LanguageSwitcher() {
                 >
                   {supportedLanguages.map((language) => (
                     <DropdownMenu.RadioItem
-                      className="relative flex cursor-default select-none items-center rounded-lg py-2 pr-8 pl-2 text-sm text-foreground outline-none data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg py-2 pr-8 pl-2 text-sm text-foreground outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                       key={language}
                       value={language}
                     >

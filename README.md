@@ -11,6 +11,8 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - React Router
 - Tailwind CSS 4
 - shadcn/ui primitives with semantic OKLCH design tokens
+- React Hook Form with Zod validation
+- date-fns with Ukrainian and British English locales
 - i18next and react-i18next
 - Motion for React
 - Radix UI primitives

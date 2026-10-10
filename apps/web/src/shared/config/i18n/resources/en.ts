@@ -44,4 +44,12 @@ export const en = {
         'Supplier onboarding will be implemented in the next product stage.',
     },
   },
+  validation: {
+    invalid: 'Check this field value.',
+    invalidDate: 'Enter a valid date.',
+    invalidEmail: 'Enter a valid email address.',
+    required: 'This field is required.',
+    tooLong: 'This value is too long.',
+    tooShort: 'This value is too short.',
+  },
 } as const
