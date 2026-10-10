@@ -43,6 +43,26 @@ export const en = {
       description:
         'Supplier onboarding will be implemented in the next product stage.',
     },
+    loading: {
+      ariaLabel: 'Loading suppliers',
+    },
+    error: {
+      title: 'Could not load suppliers',
+      description:
+        'Check your connection and try to retrieve the list again.',
+      retry: 'Try again',
+    },
+    populated: {
+      summary: 'Suppliers shown: {{count}}',
+      syntheticBadge: 'Synthetic data',
+    },
+    card: {
+      subtitle: 'Supplier profile',
+      priceLists: 'Price lists',
+      products: 'Catalog products',
+      latestPriceList: 'Latest effective price list',
+      noPriceList: 'No price lists yet',
+    },
   },
   validation: {
     invalid: 'Check this field value.',

@@ -1,10 +1,47 @@
+import { useSearchParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
-import { PackageOpen } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
+import { syntheticSuppliers } from '../model/synthetic-suppliers'
+import {
+  SuppliersEmptyState,
+  SuppliersErrorState,
+  SuppliersLoadingState,
+  SuppliersPopulatedState,
+} from './SuppliersStates'
+
+const previewStates = ['error', 'loading', 'populated'] as const
+type PreviewState = (typeof previewStates)[number]
+
+function isPreviewState(value: string | null): value is PreviewState {
+  return previewStates.some((state) => state === value)
+}
 
 export function SuppliersPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const { t } = useTranslation('suppliers')
+  const previewParam = searchParams.get('preview')
+  const previewState =
+    import.meta.env.DEV && isPreviewState(previewParam) ? previewParam : null
+
+  const retryPreview = () => {
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.set('preview', 'populated')
+    setSearchParams(nextSearchParams, { replace: true })
+  }
+
+  let content = <SuppliersEmptyState />
+
+  if (previewState === 'loading') {
+    content = <SuppliersLoadingState />
+  }
+
+  if (previewState === 'error') {
+    content = <SuppliersErrorState onRetry={retryPreview} />
+  }
+
+  if (previewState === 'populated') {
+    content = <SuppliersPopulatedState suppliers={syntheticSuppliers} />
+  }
 
   return (
     <section className="space-y-6">
@@ -20,17 +57,7 @@ export function SuppliersPage() {
         </p>
       </div>
 
-      <Card className="border-dashed shadow-none">
-        <CardContent className="flex flex-col items-center px-6 py-8 text-center sm:py-12">
-          <div className="mb-5 grid size-12 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-            <PackageOpen aria-hidden="true" className="size-5" />
-          </div>
-          <h2 className="text-lg font-semibold">{t('empty.title')}</h2>
-          <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-            {t('empty.description')}
-          </p>
-        </CardContent>
-      </Card>
+      {content}
     </section>
   )
 }
