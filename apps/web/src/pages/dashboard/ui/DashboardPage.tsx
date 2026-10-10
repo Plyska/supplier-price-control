@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Badge } from '@/components/ui/badge'
 import { StatCard } from '../../../shared/ui/stat-card'
 
 export function DashboardPage() {
@@ -11,14 +12,14 @@ export function DashboardPage() {
 
   return (
     <section className="space-y-8">
-      <div className="max-w-2xl space-y-3">
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-600">
+      <div className="max-w-3xl space-y-4">
+        <Badge variant="secondary">
           {t('dashboard.eyebrow')}
-        </p>
-        <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
+        </Badge>
+        <h1 className="text-4xl font-semibold tracking-[-0.035em] text-balance sm:text-5xl">
           {t('dashboard.title')}
         </h1>
-        <p className="text-base leading-7 text-slate-600">
+        <p className="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
           {t('dashboard.description')}
         </p>
       </div>

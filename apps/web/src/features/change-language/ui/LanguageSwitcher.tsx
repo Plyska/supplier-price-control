@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import { Check, ChevronDown } from 'lucide-react'
 import { AnimatePresence, m } from 'motion/react'
 import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
 import {
   supportedLanguages,
   type SupportedLanguage,
@@ -49,30 +51,24 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu.Root onOpenChange={setIsOpen} open={isOpen}>
       <DropdownMenu.Trigger asChild>
-        <button
+        <Button
           aria-label={t('languageSwitcher.ariaLabel')}
-          className="flex min-w-18 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:cursor-wait disabled:opacity-60"
+          className="min-w-18 justify-around text-xs font-semibold"
           disabled={isLanguageChanging}
+          size="sm"
           type="button"
+          variant="outline"
         >
           {t(languages[currentLanguage].shortLabelKey)}
-          <m.svg
+          <m.span
             animate={{ rotate: isOpen ? 180 : 0 }}
             aria-hidden="true"
-            className="size-3.5"
-            fill="none"
+            className="inline-flex"
             transition={{ duration: 0.15 }}
-            viewBox="0 0 16 16"
           >
-            <path
-              d="m4 6 4 4 4-4"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="1.5"
-            />
-          </m.svg>
-        </button>
+            <ChevronDown className="size-3.5" />
+          </m.span>
+        </Button>
       </DropdownMenu.Trigger>
 
       <AnimatePresence>
@@ -81,7 +77,7 @@ export function LanguageSwitcher() {
             <DropdownMenu.Content align="end" asChild forceMount sideOffset={8}>
               <m.div
                 animate="visible"
-                className="z-50 min-w-44 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg outline-none"
+                className="z-50 min-w-44 rounded-xl border bg-popover p-1.5 text-popover-foreground shadow-overlay outline-none"
                 exit="hidden"
                 initial="hidden"
                 style={{
@@ -90,7 +86,7 @@ export function LanguageSwitcher() {
                 }}
                 variants={dropdownVariants}
               >
-                <DropdownMenu.Label className="px-2 py-1.5 text-xs font-medium text-slate-500">
+                <DropdownMenu.Label className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   {t('languageSwitcher.label')}
                 </DropdownMenu.Label>
                 <DropdownMenu.RadioGroup
@@ -99,25 +95,13 @@ export function LanguageSwitcher() {
                 >
                   {supportedLanguages.map((language) => (
                     <DropdownMenu.RadioItem
-                      className="relative flex cursor-default select-none items-center rounded-lg py-2 pr-8 pl-2 text-sm text-slate-700 outline-none data-[highlighted]:bg-slate-100 data-[highlighted]:text-slate-950"
+                      className="relative flex cursor-pointer select-none items-center rounded-lg py-2 pr-8 pl-2 text-sm text-foreground outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground"
                       key={language}
                       value={language}
                     >
                       {t(languages[language].labelKey)}
-                      <DropdownMenu.ItemIndicator className="absolute right-2 inline-flex size-4 items-center justify-center text-indigo-600">
-                        <svg
-                          aria-hidden="true"
-                          fill="none"
-                          viewBox="0 0 16 16"
-                        >
-                          <path
-                            d="m3.5 8 3 3 6-6"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="1.75"
-                          />
-                        </svg>
+                      <DropdownMenu.ItemIndicator className="absolute right-2 inline-flex size-4 items-center justify-center text-primary">
+                        <Check aria-hidden="true" className="size-4" />
                       </DropdownMenu.ItemIndicator>
                     </DropdownMenu.RadioItem>
                   ))}
