@@ -1,5 +1,7 @@
 # Supplier Price Control
 
+[![CI](https://github.com/Plyska/supplier-price-control/actions/workflows/ci.yml/badge.svg)](https://github.com/Plyska/supplier-price-control/actions/workflows/ci.yml)
+
 Supplier Price Control is a SaaS application for importing supplier price lists, matching products, reviewing purchase price changes, and preparing approved exports.
 
 ## Current stack
@@ -16,7 +18,7 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - pnpm workspace
 - Feature-Sliced Design for the frontend architecture
 
-The API foundation is implemented with Node.js and Express. Prisma, Supabase PostgreSQL, Cloudflare R2, and a background worker are planned next.
+The API foundation is implemented with Node.js and Express. Prisma, Supabase PostgreSQL, and Cloudflare R2 belong to the infrastructure stage; the background worker will be added with the first durable file-processing job.
 
 ## Requirements
 
@@ -54,6 +56,8 @@ pnpm build
 ```
 
 The corresponding `:web` and `:api` scripts remain available for package-specific checks.
+
+GitHub Actions runs the same frozen install, typecheck, lint, test, and build checks for every pull request and every push to `main`.
 
 ## API structure
 
