@@ -7,6 +7,7 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - React 19 and TypeScript
 - Vite 8
 - React Router
+- TanStack Query
 - Tailwind CSS 4
 - i18next and react-i18next
 - Motion for React
@@ -68,7 +69,7 @@ apps/api/
 └── tests/         # HTTP and configuration tests
 ```
 
-The shared frontend API client lives in `apps/web/src/shared/api`. It has a typed health request, structured Axios error type, credentials enabled, and native `AbortSignal` support.
+The shared frontend API client lives in `apps/web/src/shared/api`. It has a typed health request, structured Axios error type, credentials enabled, and native `AbortSignal` support. TanStack Query owns the request lifecycle, and the dashboard shows localized loading, error/retry, and connected states.
 
 ## Frontend structure
 

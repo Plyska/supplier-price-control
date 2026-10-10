@@ -26,6 +26,14 @@ export const en = {
         priceLists: 'Price lists',
         itemsChanged: 'Items changed',
       },
+      apiStatus: {
+        title: 'API connection',
+        loading: 'Checking server availability…',
+        online: 'The server is available and ready for requests.',
+        error: 'Could not connect to the server.',
+        retry: 'Try again',
+        retrying: 'Checking again…',
+      },
     },
     notFound: {
       title: 'Page not found',

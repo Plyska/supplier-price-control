@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { StatCard } from '../../../shared/ui/stat-card'
+import { ApiStatusCard } from './ApiStatusCard'
 
 export function DashboardPage() {
   const { t } = useTranslation()
@@ -28,6 +29,8 @@ export function DashboardPage() {
           <StatCard key={stat.label} {...stat} />
         ))}
       </div>
+
+      <ApiStatusCard />
     </section>
   )
 }

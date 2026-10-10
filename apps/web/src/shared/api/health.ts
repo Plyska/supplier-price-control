@@ -1,5 +1,7 @@
 import { apiClient } from './client'
 
+export const healthQueryKey = ['api', 'health'] as const
+
 export type HealthResponse = {
   data: {
     status: 'ok'
