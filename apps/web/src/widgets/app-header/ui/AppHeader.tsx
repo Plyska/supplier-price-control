@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { buttonVariants } from '@/components/ui/button'
 import { LanguageSwitcher } from '../../../features/change-language'
+import { cn } from '../../../shared/lib/utils'
 import { routes } from '../../../shared/routes'
 
 const navigation = [
@@ -12,12 +14,16 @@ export function AppHeader() {
   const { t } = useTranslation()
 
   return (
-    <header className="border-b border-slate-200 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex min-h-16 w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-6 py-3 sm:flex-nowrap sm:py-0">
+    <header className="sticky top-0 z-40 border-b bg-background/92 backdrop-blur-xl supports-[backdrop-filter]:bg-background/78">
+      <div className="mx-auto flex min-h-16 w-full max-w-6xl flex-wrap items-center justify-between gap-2 px-page py-3 sm:flex-nowrap sm:py-0">
         <NavLink
-          className="text-sm font-bold tracking-[0.16em] text-slate-950 uppercase"
+          className="inline-flex items-center gap-2 text-sm font-bold tracking-[0.14em] text-foreground uppercase focus-visible:rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
           to={routes.dashboard}
         >
+          <span
+            aria-hidden="true"
+            className="size-2.5 rounded-full bg-primary shadow-[0_0_0_4px_color-mix(in_oklab,var(--primary)_14%,transparent)]"
+          />
           {t('common.brand')}
         </NavLink>
 
@@ -29,11 +35,13 @@ export function AppHeader() {
             {navigation.map(({ labelKey, to, end }) => (
               <NavLink
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-2 text-sm font-medium transition ${
-                    isActive
-                      ? 'bg-slate-950 text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
-                  }`
+                  cn(
+                    buttonVariants({
+                      size: 'sm',
+                      variant: isActive ? 'default' : 'ghost',
+                    }),
+                    !isActive && 'text-muted-foreground',
+                  )
                 }
                 end={end}
                 key={to}

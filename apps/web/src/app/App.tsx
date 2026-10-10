@@ -7,9 +7,9 @@ export function App() {
   return (
     <MotionProvider>
       <LanguageTransitionProvider>
-        <div className="min-h-screen bg-slate-50 text-slate-950">
+        <div className="min-h-screen bg-background text-foreground">
           <AppHeader />
-          <main className="mx-auto w-full max-w-6xl px-6 py-10">
+          <main className="mx-auto w-full max-w-6xl px-page py-10 sm:py-12">
             <AppRouter />
           </main>
         </div>

@@ -1,3 +1,5 @@
+import { Card, CardContent } from '@/components/ui/card'
+
 type StatCardProps = {
   label: string
   value: string
@@ -5,9 +7,13 @@ type StatCardProps = {
 
 export function StatCard({ label, value }: StatCardProps) {
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
-    </article>
+    <Card className="gap-0 py-5">
+      <CardContent>
+        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+        <p className="mt-2 text-3xl font-semibold tracking-[-0.03em] tabular-nums">
+          {value}
+        </p>
+      </CardContent>
+    </Card>
   )
 }
