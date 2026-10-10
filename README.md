@@ -49,6 +49,16 @@ For direct cross-origin requests, Express allows credentialed requests from `WEB
 
 To start a single process, use `pnpm dev:web` or `pnpm dev:api`.
 
+### Supplier page state previews
+
+During local development, the supplier page exposes deterministic previews for visual and accessibility checks:
+
+- `/suppliers?preview=loading`
+- `/suppliers?preview=error`
+- `/suppliers?preview=populated`
+
+The populated preview uses clearly labelled synthetic data. These query parameters are ignored in production and do not replace the future supplier API integration.
+
 ## Available checks
 
 ```bash
@@ -86,7 +96,9 @@ apps/web/src/
 ├── app/       # Application composition, routing, and global styles
 ├── pages/     # Route-level page composition
 ├── widgets/   # Large reusable interface blocks
+├── features/  # User interactions with product meaning
+├── entities/  # Business entities and their reusable UI
 └── shared/    # Reusable UI, routes, utilities, and infrastructure
 ```
 
-The `features` and `entities` layers will be added when the first business workflows require them. Dependencies flow from higher layers to lower layers, and each slice exposes a public API through `index.ts`.
+Dependencies flow from higher layers to lower layers, and each slice exposes a public API through `index.ts`. New slices are added only when they contain real product behavior or business concepts.
