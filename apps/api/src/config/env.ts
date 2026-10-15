@@ -1,6 +1,19 @@
 import { z } from 'zod'
 
 const environmentSchema = z.object({
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((value) => {
+      try {
+        return ['postgres:', 'postgresql:'].includes(new URL(value).protocol)
+      } catch {
+        return false
+      }
+    }, {
+      message: 'Expected a PostgreSQL connection URL',
+    }),
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(20).default(5),
   HOST: z.string().trim().min(1).default('127.0.0.1'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
@@ -16,7 +29,14 @@ export type Environment = z.infer<typeof environmentSchema>
 export function loadEnvironment(
   source: NodeJS.ProcessEnv = process.env,
 ): Environment {
-  const result = environmentSchema.safeParse(source)
+  const result = environmentSchema.safeParse({
+    ...source,
+    DATABASE_URL:
+      source.DATABASE_URL ??
+      (source.NODE_ENV === 'production'
+        ? undefined
+        : 'postgresql://spc_app:local_app_password@127.0.0.1:5433/supplier_price_control?schema=app'),
+  })
 
   if (!result.success) {
     const issues = result.error.issues
