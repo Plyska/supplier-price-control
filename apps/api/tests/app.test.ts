@@ -1,8 +1,36 @@
 import request from 'supertest'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createApp } from '../src/app.js'
 
 describe('API', () => {
+  it('checks the database for readiness', async () => {
+    const checkDatabase = vi.fn().mockResolvedValue(undefined)
+    const response = await request(createApp({ checkDatabase })).get('/api/v1/ready')
+
+    expect(checkDatabase).toHaveBeenCalledOnce()
+    expect(response.status).toBe(200)
+    expect(response.body.data.status).toBe('ok')
+  })
+
+  it('keeps liveness available and hides database errors when readiness fails', async () => {
+    const checkDatabase = vi.fn().mockRejectedValue(new Error('private database credentials'))
+    const app = createApp({ checkDatabase })
+    const ready = await request(app).get('/api/v1/ready')
+
+    expect(ready.status).toBe(503)
+    expect(ready.body.error).toEqual({
+      code: 'DATABASE_UNAVAILABLE',
+      message: 'Database is unavailable',
+      requestId: ready.headers['x-request-id'],
+    })
+    expect((await request(app).get('/api/v1/health')).status).toBe(200)
+    expect(checkDatabase).toHaveBeenCalledOnce()
+  })
+
+  it('does not report readiness without a configured database check', async () => {
+    expect((await request(createApp()).get('/api/v1/ready')).status).toBe(503)
+  })
+
   it('returns the health status and request ID', async () => {
     const response = await request(createApp()).get('/api/v1/health')
 

@@ -43,10 +43,12 @@ const handleError: ErrorRequestHandler = (
 
 type AppOptions = {
   corsOrigin?: string
+  checkDatabase?: () => Promise<void>
 }
 
 export function createApp({
   corsOrigin = 'http://localhost:5173',
+  checkDatabase,
 }: AppOptions = {}) {
   const app = express()
 
@@ -61,6 +63,22 @@ export function createApp({
   app.use(express.json({ limit: '1mb' }))
 
   app.use('/api/v1/health', healthRouter)
+
+  app.get('/api/v1/ready', async (_request, response) => {
+    try {
+      if (!checkDatabase) {
+        throw new Error('Database check is not configured')
+      }
+
+      await checkDatabase()
+      response.status(200).json({
+        data: { status: 'ok' },
+        requestId: response.locals.requestId as string,
+      })
+    } catch {
+      sendError(response, 503, 'DATABASE_UNAVAILABLE', 'Database is unavailable')
+    }
+  })
 
   app.use(notFound)
   app.use(handleError)

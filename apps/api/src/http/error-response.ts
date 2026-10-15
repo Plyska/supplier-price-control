@@ -2,6 +2,7 @@ import type { Response } from 'express'
 
 export type ApiErrorCode =
   | 'BAD_REQUEST'
+  | 'DATABASE_UNAVAILABLE'
   | 'INTERNAL_SERVER_ERROR'
   | 'ROUTE_NOT_FOUND'
 
