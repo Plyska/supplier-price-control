@@ -1,0 +1,58 @@
+import { randomUUID } from 'node:crypto'
+import { execFileSync } from 'node:child_process'
+import { expect, test } from '@playwright/test'
+
+test('pilot sign-in, locale preservation, organizations, reload, logout and multiple tabs', async ({ page, context, request }) => {
+  const email = `browser-${randomUUID()}@example.test`
+  execFileSync('pnpm', ['--filter', 'api', 'auth:provision', email, 'Synthetic browser pilot'], {
+    stdio: 'pipe', env: { ...process.env, NODE_ENV: 'test', DATABASE_URL: 'postgresql://spc_app:local_app_password@127.0.0.1:5433/supplier_price_control_test?schema=app' },
+  })
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/login$/)
+  await page.getByLabel(/Електронна пошта|Email/).fill(email)
+  await page.getByRole('button', { name: /Select interface language|Вибрати мову|Обрати мову|Мова інтерфейсу/ }).click()
+  await page.getByRole('menuitemradio', { name: /English/ }).click()
+  await expect(page.getByLabel('Email', { exact: true })).toHaveValue(email)
+  await page.getByRole('button', { name: 'Send sign-in link' }).click()
+  await expect(page.getByRole('status')).toContainText('sign-in link is on its way')
+  let link = ''
+  await expect.poll(async () => {
+    const response = await request.get(`http://127.0.0.1:8025/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)
+    const result = await response.json()
+    if (!result.messages?.length) return false
+    const message = await (await request.get(`http://127.0.0.1:8025/api/v1/message/${result.messages[0].ID}`)).json()
+    link = message.Text.match(/http:\/\/localhost:5179\/login\/verify#token=[A-Za-z]+/)?.[0] ?? ''
+    return Boolean(link)
+  }).toBe(true)
+  await page.goto(link)
+  await expect(page).toHaveURL('http://localhost:5179/login/verify')
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await expect(page).toHaveURL(/\/organizations\/[0-9a-f-]+$/)
+  const firstOrganizationUrl = page.url()
+  await page.reload()
+  await expect(page.getByText('My organization', { exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Organization settings', exact: true }).click()
+  await page.getByLabel('Name', { exact: true }).fill('Synthetic browser organization')
+  await page.getByLabel('Time zone (optional)', { exact: true }).fill('Europe/Prague')
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.getByText('Synthetic browser organization', { exact: true })).toBeVisible()
+  const otherTab = await context.newPage()
+  await otherTab.goto(firstOrganizationUrl)
+  await expect(otherTab.getByText('Synthetic browser organization', { exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Organizations', exact: true }).click()
+  await page.getByLabel('Name', { exact: true }).fill('Synthetic second browser organization')
+  await page.getByRole('button', { name: 'Create organization', exact: true }).click()
+  await expect(page.getByText('Synthetic second browser organization', { exact: true })).toBeVisible()
+  await expect(otherTab).toHaveURL(firstOrganizationUrl)
+  await expect(otherTab.getByText('Synthetic browser organization', { exact: true })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(otherTab).toHaveURL(/\/login$/)
+  await page.goto(firstOrganizationUrl)
+  await expect(page).toHaveURL(/\/login$/)
+  await page.goto(link)
+  await page.getByRole('button', { name: 'Continue', exact: true }).click()
+  await expect(page.getByRole('alert')).toContainText('invalid, expired or already used')
+})

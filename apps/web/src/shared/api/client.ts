@@ -12,6 +12,7 @@ export const apiClient = axios.create({
   baseURL: '/api/v1',
   headers: {
     Accept: 'application/json',
+    'X-SPC-CSRF': '1',
   },
   withCredentials: true,
 })

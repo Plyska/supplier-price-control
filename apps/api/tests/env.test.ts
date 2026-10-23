@@ -3,7 +3,7 @@ import { loadEnvironment } from '../src/config/env.js'
 
 describe('environment configuration', () => {
   it('provides safe local defaults', () => {
-    expect(loadEnvironment({})).toEqual({
+    expect(loadEnvironment({})).toMatchObject({
       DATABASE_URL:
         'postgresql://spc_app:local_app_password@127.0.0.1:5433/supplier_price_control?schema=app',
       DATABASE_POOL_MAX: 5,
@@ -43,5 +43,12 @@ describe('environment configuration', () => {
   it('rejects an unbounded connection pool', () => {
     expect(() => loadEnvironment({ DATABASE_POOL_MAX: '0' })).toThrow('DATABASE_POOL_MAX')
     expect(() => loadEnvironment({ DATABASE_POOL_MAX: '21' })).toThrow('DATABASE_POOL_MAX')
+  })
+
+  it('requires strong secrets, TLS and explicit mail configuration in production', () => {
+    expect(() => loadEnvironment({ AUTH_SECRET: 'short' })).toThrow('AUTH_SECRET')
+    expect(() => loadEnvironment({ NODE_ENV: 'production', DATABASE_URL: 'postgresql://localhost/test', AUTH_SECRET: 'a'.repeat(40) })).toThrow('Production requires')
+    expect(() => loadEnvironment({ SMTP_USER: 'username' })).toThrow('configured together')
+    expect(() => loadEnvironment({ AUTH_SESSION_IDLE_SECONDS: '120', AUTH_SESSION_ABSOLUTE_SECONDS: '60' })).toThrow('idle expiration')
   })
 })

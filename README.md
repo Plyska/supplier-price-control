@@ -18,12 +18,14 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - Radix UI primitives
 - Node.js and Express 5 API
 - Prisma ORM 7.10 with the PostgreSQL driver adapter
+- Better Auth 1.7.10 with PostgreSQL sessions and closed magic-link login
+- TanStack Query for private session and organization data
 - Local PostgreSQL 17 via Docker Compose
 - Zod environment validation
 - pnpm workspace
 - Feature-Sliced Design for the frontend architecture
 
-The API and local database foundations are implemented. Supabase provisioning, Cloudflare R2, authentication, and supplier persistence remain upcoming work. The background worker will be added with the first durable file-processing job.
+The API, local database, pilot authentication and minimal organization flows are implemented. Supabase provisioning, production email delivery, Cloudflare R2 and supplier persistence remain upcoming work. Durable background processing remains deferred.
 
 ## Requirements
 
@@ -57,6 +59,39 @@ For direct cross-origin requests, Express allows credentialed requests from `WEB
 
 To start a single process, use `pnpm dev:web` or `pnpm dev:api`.
 
+## Pilot authentication
+
+Start local mail capture, apply migrations, and provision a synthetic pilot account:
+
+```bash
+docker compose --profile mail up -d mailpit
+pnpm db:deploy
+pnpm auth:provision pilot@example.test "Synthetic pilot"
+pnpm dev
+```
+
+Open the frontend, request a login link, and read the captured message at `http://127.0.0.1:8025`. Mailpit captures mail locally; it does not deliver messages to real inboxes. Open the link and press Continue. Signup is closed: only provisioned accounts receive mail and can authenticate. Provisioning is idempotent and does not verify an email, reactivate an account or assign organization membership.
+
+Magic links expire after 10 minutes, are stored hashed by Better Auth and are consumed atomically once. The email link carries its token in a URL fragment; the UI removes that fragment and keeps it only in memory until confirmation. Reloading the confirmation page requires reopening the email link. A confirmation POST avoids consuming links through ordinary email scanners or prefetch. Session credentials are never returned in JSON or stored in browser storage.
+
+Sessions use signed opaque HttpOnly cookies and PostgreSQL persistence. Production cookies are host-only `__Host-spc-session`, `Secure`, `SameSite=Lax`, `Path=/`. Session tokens follow Better Auth's database representation (not custom hashing); database access and backups must be protected. The defaults are 7 days without authenticated API activity and a hard 30-day lifetime. `AUTH_SESSION_IDLE_SECONDS` and `AUTH_SESSION_ABSOLUTE_SECONDS` configure these limits. Automatic library refresh and cookie caching are disabled. Each successful login issues a new session; reauthentication replaces the current browser session while other device sessions remain valid. Logout acknowledges success only after server-side revocation; service errors do not pretend the user signed out.
+
+First verified activation creates an ordinary Organization and owner Membership transactionally, using the same creation service as explicit creation. A persisted activation marker and user-row lock prevent duplicate creation. Revoked membership never causes automatic replacement. Existing memberships are preserved. Users can create/select multiple organizations and owners can edit name/timezone; business requests always identify their organization in the URL.
+
+| Endpoint under `/api/v1` | Behavior |
+| --- | --- |
+| `POST /auth/login` | `{ email }`; generic 202 response, including unknown accounts |
+| `POST /auth/verify` | `{ token }`; 204 and session cookie after verification/activation |
+| `GET /session` | Sanitized user DTO; 401 for missing, revoked or expired sessions |
+| `POST /auth/logout` | Revoke this session and clear its cookie |
+| `GET /organizations` | Current accessible memberships |
+| `POST /organizations` | `{ name, timeZone }` and UUID `Idempotency-Key`; create owner membership |
+| `GET/PATCH /organizations/:organizationId` | Tenant-checked read; owner-only settings update |
+
+Mutations require JSON, exact `Origin: WEB_ORIGIN` and `X-SPC-CSRF: 1`. The frontend supplies the custom header. Better Auth is reached through its HTTP handler to retain library rate limiting; its general account/session endpoints are not publicly mounted. The current library rate-limit store is PostgreSQL. Configure `TRUST_PROXY_HOPS` only for the actual trusted deployment topology; client-provided IP headers are replaced with Express's resolved IP. Production requires a private random `AUTH_SECRET` (at least 32 characters), HTTPS `WEB_ORIGIN`, and explicit SMTP host/sender. SMTP authentication uses `SMTP_USER`/`SMTP_PASSWORD`; production transport requires TLS. Never put these credentials in frontend variables or logs.
+
+Recovery for a user who still controls their email is a fresh login link. Lost-mailbox recovery, email changes, member invitations, password login and public signup are not implemented. Handle lost-mailbox requests through an independently verified operator process; do not change a user's email merely on request or rerun provisioning to restore memberships. Production SMTP/domain delivery and remote database configuration must be verified before real pilot access.
+
 ## Local database and migrations
 
 Docker binds PostgreSQL to `127.0.0.1:5433` and stores data in the named `postgres_data` volume. `pnpm db:down` stops PostgreSQL and preserves its data. Bootstrap SQL runs only when that volume is first initialized. Passwords in Compose and the examples are disposable local credentials, never production secrets.
@@ -80,9 +115,9 @@ The bootstrap creates three databases: `supplier_price_control` for development,
 
 Only the `app` schema is managed by Prisma. Supabase `auth`/`storage` and future pg-boss schemas are outside its scope. Use a separate disposable shadow database: Prisma may erase its contents, and configuration rejects using the same database for migrations and shadow work. Review generated SQL before applying it; use `migrate deploy` for deployment, never `db push` or `migrate dev` against production.
 
-The initial models are `Organization`, `User`, `Membership`, and `AuditEvent`. Membership roles are `owner`, `editor`, and `viewer` (the default). Organization time zones remain unset until explicitly configured. Emails must be trimmed and lowercase; passwords and sessions await the authentication implementation. Memberships can be revoked while retaining audit history. Audit actors use a composite foreign key to membership in the same organization; system events may have no actor. Database triggers reject audit updates/deletions, and runtime credentials cannot truncate the audit table. Audit metadata must be a JSON object containing only minimal event context, never full price lists, secrets, or personal pricing terms.
+The identity foundation includes `Organization`, `User`, `Membership`, and `AuditEvent`, extended through a forward migration with `Session`, Better Auth's core `Account`/`Verification`/`RateLimit` models and `OrganizationCreation` idempotency records. Account fields for password/OAuth credentials are currently unused. Membership roles are `owner`, `editor`, and `viewer` (the default). Organization time zones remain unset until explicitly configured. Emails must be trimmed and lowercase. Memberships can be revoked while retaining audit history. Audit actors use a composite foreign key to membership in the same organization; system events may have no actor. Database triggers reject audit updates/deletions, and runtime credentials cannot truncate the audit table. Audit metadata must be a JSON object containing only minimal event context, never full price lists, secrets, or personal pricing terms.
 
-These constraints preserve data integrity; tenant authorization and active-membership checks still need to be implemented in authenticated API use cases. The shared runtime role does not provide row-level tenant isolation on its own.
+Organization endpoints enforce current membership and owner permissions. Future business endpoints must enforce the same tenant boundary. The shared runtime role does not provide row-level tenant isolation on its own.
 
 For Supabase, provision separate runtime/migration roles and grants, use direct or session connections, and disable unused Data API access before deployment. Local verification does not verify Supabase connectivity or permissions. See the [Prisma 7 PostgreSQL guide](https://www.prisma.io/docs/orm/v7/core-concepts/supported-databases/postgresql) and [Prisma configuration reference](https://www.prisma.io/docs/orm/v7/reference/prisma-config-reference).
 
@@ -90,9 +125,9 @@ For Supabase, provision separate runtime/migration roles and grants, use direct 
 
 During local development, the supplier page exposes deterministic previews for visual and accessibility checks:
 
-- `/suppliers?preview=loading`
-- `/suppliers?preview=error`
-- `/suppliers?preview=populated`
+- `/organizations/:organizationId/suppliers?preview=loading`
+- `/organizations/:organizationId/suppliers?preview=error`
+- `/organizations/:organizationId/suppliers?preview=populated`
 
 The populated preview uses clearly labelled synthetic data. These query parameters are ignored in production and do not replace the future supplier API integration.
 
@@ -118,7 +153,17 @@ pnpm db:test
 
 Tests require `TEST_DATABASE_URL` from `packages/db/.env` or the environment. They refuse remote hosts and database names without the `_test` suffix. `pnpm test` runs API unit/HTTP tests without needing PostgreSQL; `pnpm db:test` checks real database constraints, rollback, audit integrity, and runtime privileges.
 
-GitHub Actions runs a frozen install, local PostgreSQL bootstrap, migration deployment/replay/schema comparison, typecheck, lint, API and database tests, and build for every pull request and every push to `main`.
+Run authentication integration tests against the same local test database:
+
+```bash
+TEST_DATABASE_URL='postgresql://spc_app:local_app_password@127.0.0.1:5433/supplier_price_control_test?schema=app' pnpm auth:test
+```
+
+These cover actual Better Auth requests, token replay/concurrency, expiry, rotation, logout revocation failures, store/mail outages, CSRF, rate limiting, organization isolation and idempotent creation. Unlike the transactional database tests, HTTP tests retain uniquely named synthetic fixtures in the disposable test database because requests span independent transactions and audit records are immutable. Do not point them at real customer data. `pnpm test` skips these integration cases when `TEST_DATABASE_URL` is absent; explicit `pnpm auth:test` requires it.
+
+With Google Chrome installed, the test database migrated and local Mailpit running, `pnpm test:e2e` starts dedicated API/web servers on ports 3009/5179. It tests mail delivery, login, language changes without form loss, organization settings/creation, reload, independent tabs, mobile layout, synchronized logout and replay rejection. No real email is sent. Traces and screenshots are disabled to keep credentials out of artifacts.
+
+GitHub Actions runs a frozen install, local PostgreSQL bootstrap, migration deployment/replay/schema comparison, typecheck, lint, API/database/authentication tests, and build for every pull request and every push to `main`. The Chrome/Mailpit browser test is currently a local check.
 
 ## Database package
 

@@ -9,16 +9,22 @@
     "lint": "oxlint",
     "start": "node dist/server.js",
     "test": "vitest run",
+    "auth:provision": "tsx src/scripts/provision-pilot.ts",
+    "test:integration": "vitest run tests/auth.integration.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@better-auth/prisma-adapter": "1.7.10",
     "@supplier-price-control/db": "workspace:*",
+    "better-auth": "1.7.10",
+    "nodemailer": "10.1.2",
     "cors": "^2.8.6",
     "dotenv": "^18.0.7",
     "express": "^5.3.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/nodemailer": "8.0.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.13.3",

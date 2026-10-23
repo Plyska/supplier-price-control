@@ -1,50 +1,34 @@
-import { AnimatePresence } from 'motion/react'
+import { m } from 'motion/react'
 import { Route, Routes, useLocation } from 'react-router'
 import { useLanguageTransition } from '../../features/change-language'
 import { DashboardPage } from '../../pages/dashboard'
 import { NotFoundPage } from '../../pages/not-found'
 import { SuppliersPage } from '../../pages/suppliers'
-import { routes } from '../../shared/routes'
+import { pageVariants } from '../../shared/config/motion'
+import { OrganizationsPage, OrganizationSettingsPage } from '../../pages/organizations'
 import { PageTransition } from '../../shared/ui/page-transition'
+import { LoginPage } from '../../pages/login'
+import { RequireSession } from './RequireSession'
+import { RequireOrganization } from './RequireOrganization'
 
 export function AppRouter() {
   const location = useLocation()
   const { completeLanguageExit, isPageVisible } = useLanguageTransition()
 
-  return (
-    <AnimatePresence
-      initial={false}
-      mode="wait"
-      onExitComplete={completeLanguageExit}
-    >
-      {isPageVisible ? (
-        <Routes key={location.pathname} location={location}>
-          <Route
-            path={routes.dashboard}
-            element={
-              <PageTransition>
-                <DashboardPage />
-              </PageTransition>
-            }
-          />
-          <Route
-            path={routes.suppliers}
-            element={
-              <PageTransition>
-                <SuppliersPage />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="*"
-            element={
-              <PageTransition>
-                <NotFoundPage />
-              </PageTransition>
-            }
-          />
+  const isLogin = location.pathname === '/login' || location.pathname === '/login/verify'
+  // Keep form state mounted during exit -> locale change -> enter.
+  // Account/tenant navigation discards private content immediately.
+  return <m.div variants={pageVariants} initial={false} animate={isPageVisible ? 'animate' : 'exit'}
+    onAnimationComplete={(definition) => { if (definition === 'exit') completeLanguageExit() }}>
+    {isLogin ? <PageTransition key={location.pathname}><LoginPage /></PageTransition> :
+      <RequireSession><PageTransition key={location.pathname}>
+        <Routes location={location}>
+          <Route path="/" element={<OrganizationsPage />} />
+          <Route path="/organizations/:organizationId" element={<RequireOrganization><DashboardPage /></RequireOrganization>} />
+          <Route path="/organizations/:organizationId/suppliers" element={<RequireOrganization><SuppliersPage /></RequireOrganization>} />
+          <Route path="/organizations/:organizationId/settings" element={<RequireOrganization><OrganizationSettingsPage /></RequireOrganization>} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      ) : null}
-    </AnimatePresence>
-  )
+      </PageTransition></RequireSession>}
+  </m.div>
 }
