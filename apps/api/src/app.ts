@@ -6,6 +6,11 @@ import express, {
 import { sendError } from './http/error-response.js'
 import { requestId } from './http/request-id.js'
 import { healthRouter } from './routes/health.js'
+import { HttpError } from './http/http-error.js'
+import { identityRouter } from './auth/router.js'
+import type { Auth } from './auth/auth.js'
+import type { PrismaClient } from '@supplier-price-control/db'
+import type { Environment } from './config/env.js'
 
 const notFound: RequestHandler = (_request, response) => {
   sendError(response, 404, 'ROUTE_NOT_FOUND', 'Route not found')
@@ -23,6 +28,10 @@ const handleError: ErrorRequestHandler = (
   }
 
   const requestIdValue = response.locals.requestId as string
+  if (error instanceof HttpError) {
+    sendError(response, error.status, error.code, error.message)
+    return
+  }
   const isBadRequest =
     typeof error === 'object' &&
     error !== null &&
@@ -30,7 +39,7 @@ const handleError: ErrorRequestHandler = (
     error.status === 400
 
   if (!isBadRequest) {
-    console.error('Unhandled API error', { requestId: requestIdValue, error })
+    console.error('Unhandled API error', { requestId: requestIdValue })
   }
 
   sendError(
@@ -44,15 +53,18 @@ const handleError: ErrorRequestHandler = (
 type AppOptions = {
   corsOrigin?: string
   checkDatabase?: () => Promise<void>
+  identity?: { auth: Auth; database: PrismaClient; environment: Environment }
 }
 
 export function createApp({
   corsOrigin = 'http://localhost:5173',
   checkDatabase,
+  identity,
 }: AppOptions = {}) {
   const app = express()
 
   app.disable('x-powered-by')
+  app.set('trust proxy', identity?.environment.TRUST_PROXY_HOPS ?? 0)
   app.use(requestId)
   app.use(
     cors({
@@ -61,6 +73,13 @@ export function createApp({
     }),
   )
   app.use(express.json({ limit: '1mb' }))
+  app.use((_req, res, next) => {
+    res.set('X-Content-Type-Options', 'nosniff')
+    next()
+  })
+  if (identity) {
+    app.use('/api/v1', identityRouter(identity.auth, identity.database, identity.environment))
+  }
 
   app.use('/api/v1/health', healthRouter)
 

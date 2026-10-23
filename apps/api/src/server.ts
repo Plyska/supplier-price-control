@@ -2,6 +2,8 @@ import 'dotenv/config'
 import { createDatabase } from '@supplier-price-control/db'
 import { createApp } from './app.js'
 import { loadEnvironment } from './config/env.js'
+import { createAuth } from './auth/auth.js'
+import { createLoginMailer } from './auth/mail.js'
 
 const environment = loadEnvironment()
 const database = createDatabase({
@@ -9,6 +11,7 @@ const database = createDatabase({
   maxConnections: environment.DATABASE_POOL_MAX,
 })
 const app = createApp({
+  identity: { auth: createAuth(database, environment, createLoginMailer(environment)), database, environment },
   corsOrigin: environment.WEB_ORIGIN,
   checkDatabase: async () => {
     await database.$queryRaw`SELECT 1`
