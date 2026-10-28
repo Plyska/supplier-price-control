@@ -73,7 +73,7 @@ function SuppliersErrorState({ onRetry }: SuppliersErrorStateProps) {
   )
 }
 
-function SuppliersEmptyState() {
+function SuppliersEmptyState({ filtered = false }: { filtered?: boolean }) {
   const { t } = useTranslation('suppliers')
 
   return (
@@ -82,9 +82,9 @@ function SuppliersEmptyState() {
         <div className="mb-5 grid size-12 place-items-center rounded-xl bg-secondary text-secondary-foreground">
           <PackageOpen aria-hidden="true" className="size-5" />
         </div>
-        <h2 className="text-lg font-semibold">{t('empty.title')}</h2>
+        <h2 className="text-lg font-semibold">{t(filtered ? 'empty.filteredTitle' : 'empty.title')}</h2>
         <p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-          {t('empty.description')}
+          {t(filtered ? 'empty.filteredDescription' : 'empty.description')}
         </p>
       </CardContent>
     </Card>
@@ -92,11 +92,17 @@ function SuppliersEmptyState() {
 }
 
 type SuppliersPopulatedStateProps = {
+  detailsHref?: (supplier: SupplierSummary) => string
+  synthetic?: boolean
   suppliers: SupplierSummary[]
+  total?: number
 }
 
 function SuppliersPopulatedState({
+  detailsHref,
+  synthetic = false,
   suppliers,
+  total = suppliers.length,
 }: SuppliersPopulatedStateProps) {
   const { t } = useTranslation('suppliers')
 
@@ -104,13 +110,17 @@ function SuppliersPopulatedState({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {t('populated.summary', { count: suppliers.length })}
+          {t('populated.summary', { count: total })}
         </p>
-        <Badge variant="outline">{t('populated.syntheticBadge')}</Badge>
+        {synthetic && <Badge variant="outline">{t('populated.syntheticBadge')}</Badge>}
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {suppliers.map((supplier) => (
-          <SupplierCard key={supplier.id} supplier={supplier} />
+          <SupplierCard
+            detailsHref={detailsHref?.(supplier)}
+            key={supplier.id}
+            supplier={supplier}
+          />
         ))}
       </div>
     </div>

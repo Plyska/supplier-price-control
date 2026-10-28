@@ -1,4 +1,5 @@
 import { Building2 } from 'lucide-react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import {
   Card,
@@ -8,12 +9,15 @@ import {
 } from '@/components/ui/card'
 import { formatDateOnly } from '@/shared/lib/date'
 import type { SupplierSummary } from '../model/types'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
 
 type SupplierCardProps = {
+  detailsHref?: string
   supplier: SupplierSummary
 }
 
-function SupplierCard({ supplier }: SupplierCardProps) {
+function SupplierCard({ detailsHref, supplier }: SupplierCardProps) {
   const { i18n, t } = useTranslation('suppliers')
   const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'uk'
   const numberFormatter = new Intl.NumberFormat(
@@ -34,7 +38,10 @@ function SupplierCard({ supplier }: SupplierCardProps) {
             <h2 className="truncate text-base font-semibold leading-none">
               {supplier.name}
             </h2>
-            <CardDescription>{t('card.subtitle')}</CardDescription>
+            <CardDescription className="flex items-center gap-2">
+              {t('card.subtitle')}
+              {supplier.archivedAt && <Badge variant="outline">{t('card.archived')}</Badge>}
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -64,6 +71,11 @@ function SupplierCard({ supplier }: SupplierCardProps) {
             {latestPriceListDate ?? t('card.noPriceList')}
           </p>
         </div>
+        {detailsHref && (
+          <Link className={buttonVariants({ className: 'col-span-2', variant: 'outline' })} to={detailsHref}>
+            {t('card.open')}
+          </Link>
+        )}
       </CardContent>
     </Card>
   )

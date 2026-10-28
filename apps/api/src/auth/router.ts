@@ -8,6 +8,7 @@ import { activateAccount, createOrganization } from '../organizations/service.js
 import type { Auth } from './auth.js'
 import { authHeaders, requireSession } from './session.js'
 import { pilotInput } from './provision.js'
+import { createCsrfGuard } from '../http/csrf.js'
 
 const organizationInput = z.object({
   name: z.string().trim().min(1).max(200),
@@ -23,13 +24,7 @@ export function identityRouter(auth: Auth, db: PrismaClient, env: Environment) {
     res.set('Referrer-Policy', 'no-referrer')
     next()
   })
-  const csrf: RequestHandler = (req, _res, next) => {
-    if (req.get('origin') !== env.WEB_ORIGIN || req.get('x-spc-csrf') !== '1' || !req.is('application/json')) {
-      next(new HttpError(403, 'INVALID_ORIGIN', 'Request origin is not allowed'))
-      return
-    }
-    next()
-  }
+  const csrf = createCsrfGuard(env)
   const safe = (handler: (req: Request, res: Response) => Promise<void>): RequestHandler => async (req, res, next) => {
     try { await handler(req, res) } catch (error) {
       if (error instanceof HttpError) return next(error)
@@ -59,7 +54,6 @@ export function identityRouter(auth: Auth, db: PrismaClient, env: Environment) {
   }
 
   router.post('/auth/login', csrf, safe(async (req, res) => {
-    console.log('Login request body:', req.body)
     const { email } = pilotInput.pick({ email: true }).parse(req.body)
     const upstream = await dispatch(req, '/sign-in/magic-link', {
       email, callbackURL: '/', errorCallbackURL: '/login',

@@ -5,16 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:local": "PORT=3010 WEB_ORIGIN=http://localhost:5180 tsx watch src/server.ts",
     "build": "tsc -p tsconfig.build.json",
     "lint": "oxlint",
     "start": "node dist/server.js",
     "test": "vitest run",
     "auth:provision": "tsx src/scripts/provision-pilot.ts",
-    "test:integration": "vitest run tests/auth.integration.test.ts",
+    "test:integration": "vitest run tests/*.integration.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "1.7.10",
+    "@supplier-price-control/contracts": "workspace:*",
     "@supplier-price-control/db": "workspace:*",
     "better-auth": "1.7.10",
     "nodemailer": "10.1.2",
