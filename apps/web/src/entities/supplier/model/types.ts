@@ -1,9 +1,1 @@
-type SupplierSummary = {
-  id: string
-  latestPriceListDate: string | null
-  name: string
-  priceListsCount: number
-  productsCount: number
-}
-
-export type { SupplierSummary }
+export type { Supplier as SupplierSummary } from '@supplier-price-control/contracts'

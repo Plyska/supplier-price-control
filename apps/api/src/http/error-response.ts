@@ -14,6 +14,7 @@ export type ApiErrorCode =
   | 'NOT_FOUND'
   | 'FORBIDDEN'
   | 'IDEMPOTENCY_CONFLICT'
+  | 'RESOURCE_ARCHIVED'
 
 export function sendError(
   response: Response,

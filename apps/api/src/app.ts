@@ -8,9 +8,11 @@ import { requestId } from './http/request-id.js'
 import { healthRouter } from './routes/health.js'
 import { HttpError } from './http/http-error.js'
 import { identityRouter } from './auth/router.js'
-import type { Auth } from './auth/auth.js'
 import type { PrismaClient } from '@supplier-price-control/db'
 import type { Environment } from './config/env.js'
+import type { Auth } from './auth/auth.js'
+import { supplierRouter } from './suppliers/router.js'
+import { ZodError } from 'zod'
 
 const notFound: RequestHandler = (_request, response) => {
   sendError(response, 404, 'ROUTE_NOT_FOUND', 'Route not found')
@@ -30,6 +32,10 @@ const handleError: ErrorRequestHandler = (
   const requestIdValue = response.locals.requestId as string
   if (error instanceof HttpError) {
     sendError(response, error.status, error.code, error.message)
+    return
+  }
+  if (error instanceof ZodError) {
+    sendError(response, 400, 'INVALID_INPUT', 'Invalid request data')
     return
   }
   const isBadRequest =
@@ -79,6 +85,10 @@ export function createApp({
   })
   if (identity) {
     app.use('/api/v1', identityRouter(identity.auth, identity.database, identity.environment))
+    app.use(
+      '/api/v1/organizations/:organizationId/suppliers',
+      supplierRouter(identity.auth, identity.database, identity.environment),
+    )
   }
 
   app.use('/api/v1/health', healthRouter)

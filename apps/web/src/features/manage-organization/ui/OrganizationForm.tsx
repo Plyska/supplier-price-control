@@ -16,8 +16,8 @@ const schema = z.object({
   }, 'invalid'),
 })
 
-export function OrganizationForm({ userId, organization, onSaved }: {
-  userId: string; organization?: Organization; onSaved: (organization: Organization) => void
+export function OrganizationForm({ userId, organization, onSaved, autoFocus = false }: {
+  userId: string; organization?: Organization; onSaved: (organization: Organization) => void; autoFocus?: boolean
 }) {
   const { t } = useTranslation('auth')
   const client = useQueryClient()
@@ -45,7 +45,7 @@ export function OrganizationForm({ userId, organization, onSaved }: {
   })
   return <form onSubmit={submit} noValidate className="max-w-md space-y-4">
     <Field><FieldLabel htmlFor="organization-name">{t('name')}</FieldLabel>
-      <Input id="organization-name" {...form.register('name')} aria-invalid={Boolean(form.formState.errors.name)} aria-describedby="organization-name-error" />
+      <Input id="organization-name" autoFocus={autoFocus} {...form.register('name')} aria-invalid={Boolean(form.formState.errors.name)} aria-describedby="organization-name-error" />
       <FieldError id="organization-name-error" errors={[form.formState.errors.name]} /></Field>
     <Field><FieldLabel htmlFor="organization-timezone">{t('timeZone')}</FieldLabel>
       <Input id="organization-timezone" placeholder="Europe/Prague" {...form.register('timeZone')} aria-invalid={Boolean(form.formState.errors.timeZone)} aria-describedby="organization-timezone-error" />
