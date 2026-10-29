@@ -8,7 +8,8 @@ import { useSession } from '../../../entities/session'
 import { useOrganizations, useOrganization } from '../../../entities/organization'
 import { OrganizationForm } from '../../../features/manage-organization'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { LanguageSwitcher } from '../../../features/change-language'
 import { backdropVariants, dialogTransition, dialogVariants } from '@/shared/config/motion'
 
 export function OrganizationsPage() {
@@ -86,7 +87,25 @@ export function OrganizationSettingsPage() {
   const navigate = useNavigate()
   if (!session.data || !organization.data) return null
   if (organization.data.role !== 'owner') return <p role="alert">{t('forbidden')}</p>
-  return <section className="space-y-6"><h1 className="text-2xl font-semibold">{t('settings')}</h1>
-    <OrganizationForm userId={session.data.user.userId} organization={organization.data} onSaved={() => navigate(`/organizations/${organizationId}`)} />
+  return <section className="mx-auto w-full max-w-xl space-y-6"><div className="space-y-2">
+    <h1 className="text-2xl font-semibold">{t('settings')}</h1>
+    <p className="text-sm text-muted-foreground">{t('settingsDescription')}</p>
+  </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('organizationSection')}</CardTitle>
+        <CardDescription>{t('organizationSectionDescription')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <OrganizationForm userId={session.data.user.userId} organization={organization.data} onSaved={() => navigate(`/organizations/${organizationId}`)} />
+      </CardContent>
+    </Card>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('interfaceSection')}</CardTitle>
+        <CardDescription>{t('interfaceSectionDescription')}</CardDescription>
+        <CardAction className="self-center"><LanguageSwitcher showFullLabel /></CardAction>
+      </CardHeader>
+    </Card>
   </section>
 }

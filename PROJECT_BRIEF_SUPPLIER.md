@@ -12,7 +12,11 @@ Authentication decision and implementation (2026-10-16): the owner selected Bett
 
 Authentication confirmation (2026-10-28): the owner retained Better Auth + Prisma/PostgreSQL. The unfinished custom token/session implementation was removed, the auth schema was restored to match the existing migrations, and supplier authorization continues to use the shared Better Auth session. No new login methods or public signup were added.
 
+Workspace navigation implementation (2026-10-28): organization routes now use a persistent responsive sidebar with an explicit organization switcher, Overview/Suppliers navigation, owner settings, language and account controls. The root route remains an organization picker and creator. The selected organization stays in the URL, so changing it in one browser tab never changes another tab's scope.
+
 ## 1. Що будуємо
+
+UI preview update (2026-10-29): the organization overview and supplier profile contain explicitly labelled synthetic metrics, price-list history and review examples. The supplier profile presents persisted identity/status/note in a compact header, with editing in a modal. Preview imports, comparison and pricing terms do not represent implemented business functionality or saved supplier conditions.
 
 SaaS для оптовиків і дистриб’юторів, який перетворює нові прайси постачальників на перевірені зміни закупівельних цін у власному каталозі компанії.
 

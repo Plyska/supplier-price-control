@@ -31,7 +31,7 @@ function isSupportedLanguage(language: string): language is SupportedLanguage {
   )
 }
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ showFullLabel = false }: { showFullLabel?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const { i18n, t } = useTranslation()
   const { isLanguageChanging, requestLanguageChange } =
@@ -53,13 +53,13 @@ export function LanguageSwitcher() {
       <DropdownMenu.Trigger asChild>
         <Button
           aria-label={t('languageSwitcher.ariaLabel')}
-          className="min-w-18 justify-around text-xs font-semibold"
+          className={showFullLabel ? 'min-w-36 justify-between' : 'min-w-18 justify-around text-xs font-semibold'}
           disabled={isLanguageChanging}
           size="sm"
           type="button"
           variant="outline"
         >
-          {t(languages[currentLanguage].shortLabelKey)}
+          {t(languages[currentLanguage][showFullLabel ? 'labelKey' : 'shortLabelKey'])}
           <m.span
             animate={{ rotate: isOpen ? 180 : 0 }}
             aria-hidden="true"
