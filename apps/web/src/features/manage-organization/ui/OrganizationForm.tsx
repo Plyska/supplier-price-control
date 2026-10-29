@@ -43,7 +43,7 @@ export function OrganizationForm({ userId, organization, onSaved, autoFocus = fa
       setError(status === 400 ? 'invalidOrganization' : status === 403 || status === 404 ? 'forbidden' : 'unavailable')
     }
   })
-  return <form onSubmit={submit} noValidate className="max-w-md space-y-4">
+  return <form onSubmit={submit} noValidate className="w-full space-y-4">
     <Field><FieldLabel htmlFor="organization-name">{t('name')}</FieldLabel>
       <Input id="organization-name" autoFocus={autoFocus} {...form.register('name')} aria-invalid={Boolean(form.formState.errors.name)} aria-describedby="organization-name-error" />
       <FieldError id="organization-name-error" errors={[form.formState.errors.name]} /></Field>

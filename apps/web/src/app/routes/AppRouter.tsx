@@ -1,5 +1,6 @@
 import { m } from 'motion/react'
-import { Route, Routes, useLocation } from 'react-router'
+import { Outlet, Route, Routes, useLocation } from 'react-router'
+import type { ReactNode } from 'react'
 import { useLanguageTransition } from '../../features/change-language'
 import { DashboardPage } from '../../pages/dashboard'
 import { NotFoundPage } from '../../pages/not-found'
@@ -20,16 +21,27 @@ export function AppRouter() {
   // Account/tenant navigation discards private content immediately.
   return <m.div variants={pageVariants} initial={false} animate={isPageVisible ? 'animate' : 'exit'}
     onAnimationComplete={(definition) => { if (definition === 'exit') completeLanguageExit() }}>
-    {isLogin ? <PageTransition key={location.pathname}><LoginPage /></PageTransition> :
-      <RequireSession><PageTransition key={location.pathname}>
+    {isLogin ? <TransitionedPage><LoginPage /></TransitionedPage> :
+      <RequireSession>
         <Routes location={location}>
-          <Route path="/" element={<OrganizationsPage />} />
-          <Route path="/organizations/:organizationId" element={<RequireOrganization><DashboardPage /></RequireOrganization>} />
-          <Route path="/organizations/:organizationId/suppliers" element={<RequireOrganization><SuppliersPage /></RequireOrganization>} />
-          <Route path="/organizations/:organizationId/suppliers/:supplierId" element={<RequireOrganization><SupplierDetailsPage /></RequireOrganization>} />
-          <Route path="/organizations/:organizationId/settings" element={<RequireOrganization><OrganizationSettingsPage /></RequireOrganization>} />
-          <Route path="*" element={<NotFoundPage />} />
+          <Route path="/" element={<TransitionedPage><OrganizationsPage /></TransitionedPage>} />
+          <Route path="/organizations/:organizationId" element={<RequireOrganization><WorkspacePage /></RequireOrganization>}>
+            <Route index element={<DashboardPage />} />
+            <Route path="suppliers" element={<SuppliersPage />} />
+            <Route path="suppliers/:supplierId" element={<SupplierDetailsPage />} />
+            <Route path="settings" element={<OrganizationSettingsPage />} />
+          </Route>
+          <Route path="*" element={<TransitionedPage><NotFoundPage /></TransitionedPage>} />
         </Routes>
-      </PageTransition></RequireSession>}
+      </RequireSession>}
   </m.div>
+}
+
+function TransitionedPage({ children }: { children: ReactNode }) {
+  const location = useLocation()
+  return <PageTransition key={location.pathname}>{children}</PageTransition>
+}
+
+function WorkspacePage() {
+  return <TransitionedPage><Outlet /></TransitionedPage>
 }

@@ -26,7 +26,7 @@ Supplier Price Control is a SaaS application for importing supplier price lists,
 - pnpm workspace
 - Feature-Sliced Design for the frontend architecture
 
-The API, local database, pilot authentication, minimal organization flows and tenant-scoped supplier management are implemented. Supabase provisioning, production email delivery and Cloudflare R2 remain upcoming work. Durable background processing remains deferred.
+The API, local database, pilot authentication, responsive organization workspace sidebar and tenant-scoped supplier management are implemented. Supabase provisioning, production email delivery and Cloudflare R2 remain upcoming work. Durable background processing remains deferred.
 
 ## Requirements
 
@@ -77,7 +77,7 @@ Magic links expire after 10 minutes, are stored hashed by Better Auth and are co
 
 Sessions use signed opaque HttpOnly cookies and PostgreSQL persistence. Production cookies are host-only `__Host-spc-session`, `Secure`, `SameSite=Lax`, `Path=/`. Session tokens follow Better Auth's database representation (not custom hashing); database access and backups must be protected. The defaults are 7 days without authenticated API activity and a hard 30-day lifetime. `AUTH_SESSION_IDLE_SECONDS` and `AUTH_SESSION_ABSOLUTE_SECONDS` configure these limits. Automatic library refresh and cookie caching are disabled. Each successful login issues a new session; reauthentication replaces the current browser session while other device sessions remain valid. Logout acknowledges success only after server-side revocation; service errors do not pretend the user signed out.
 
-First verified activation creates an ordinary Organization and owner Membership transactionally, using the same creation service as explicit creation. A persisted activation marker and user-row lock prevent duplicate creation. Revoked membership never causes automatic replacement. Existing memberships are preserved. Users can create/select multiple organizations and owners can edit name/timezone; business requests always identify their organization in the URL.
+First verified activation creates an ordinary Organization and owner Membership transactionally, using the same creation service as explicit creation. A persisted activation marker and user-row lock prevent duplicate creation. Revoked membership never causes automatic replacement. Existing memberships are preserved. Users can create/select multiple organizations and owners can edit name/timezone; business requests always identify their organization in the URL. Organization routes use a desktop sidebar and an accessible mobile drawer; its switcher changes only the current tab's URL, while `/` remains the full organization list and creation flow.
 
 | Endpoint under `/api/v1` | Behavior |
 | --- | --- |
@@ -215,7 +215,7 @@ Open `http://localhost:5180`; local mail is at `http://127.0.0.1:8025`. Complete
 | Account isolation | In a separate browser profile/private window, sign in as `second@example.test`. Opening the first user's organization/supplier URL must not reveal its data. |
 | Logout | Open two tabs in the same browser profile, then sign out in one. Both return to login and private URLs stay protected. An independent browser session remains signed in. |
 | Availability | With web running, stop the API and reload a private page: show a service error, not a successful logout. Restart the API and retry. A real supplier request can also be blocked in DevTools to inspect its error/retry state. |
-| UI and accessibility | Check keyboard navigation, focus, dialogs, 390 px width and reduced motion. Verify language survives reload. Use the supplier preview URLs above for deterministic loading/error/populated visuals. |
+| UI and accessibility | Check desktop sidebar active states and organization switching, keyboard navigation, focus restoration, dialogs, 390 px drawer width and reduced motion. Verify language survives reload. Use the supplier preview URLs above for deterministic loading/error/populated visuals. |
 
 Viewer/editor permissions, revoked memberships, idle/absolute expiry, concurrent token consumption, CSRF, rate limits, audit integrity and database/SMTP failures are covered by the integration suites. Team administration has no UI yet; those role checks use synthetic memberships prepared by the tests. Development mail capture does not verify production email delivery or Supabase connectivity.
 

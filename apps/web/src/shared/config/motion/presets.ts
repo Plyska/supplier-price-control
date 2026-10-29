@@ -21,6 +21,11 @@ export const dialogVariants = {
   visible: { opacity: 1, scale: 1, y: 0 },
 } satisfies Variants
 
+export const drawerVariants = {
+  hidden: { x: '-100%' },
+  visible: { x: 0 },
+} satisfies Variants
+
 export const dialogTransition = {
   duration: 0.38,
   ease: [0.22, 1, 0.36, 1],
